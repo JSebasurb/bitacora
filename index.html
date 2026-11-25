@@ -86,6 +86,18 @@ table.cmp{border-collapse:collapse;font-size:13px;min-width:560px}table.cmp th,t
 .shc{position:relative;width:100%;max-width:520px;background:var(--card);border-radius:26px 26px 0 0;padding:22px 16px calc(16px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1)}.sh.on .shc{transform:none}
 .shc h4{margin:0 0 14px;font-size:17px;text-align:center}.shc .sec{width:100%;margin-top:8px;padding:14px}.shc .dg{background:var(--rd);color:#fff}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ===== Ajustes para celular ===== */
+html{overscroll-behavior-y:none}
+button,select,input,label,.row{touch-action:manipulation}
+button{-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+header select{min-height:40px}
+.chips button,.seg button,.qchips button,button.sec,button.dng{min-height:44px}
+.row .x{min-width:44px;min-height:44px}
+.datebar .ic{min-height:48px}
+nav button{min-height:54px}
+.wbtn{min-height:44px}
+input,select{min-height:46px}
+@media(max-width:380px){main{padding:12px 12px}.medal{width:210px;height:210px}.kpi b{font-size:18px}.amts button{padding:12px 0}}
 </style>
 </head>
 <body>
@@ -135,6 +147,41 @@ function sheet(msg,o={}){return new Promise(res=>{
   w.querySelector('.sec').onclick=w.querySelector('.shb').onclick=()=>done(inp?null:false);
   if(inp)setTimeout(()=>inp.focus(),120)})}
 
+/* ========= Arquitectura medallón: Bronze → Silver → Gold =========
+   BRONZE: bitácora de eventos cruda, solo se agrega (nunca se edita ni se borra).
+   SILVER: estado limpio y validado, reconstruido reproduciendo Bronze.
+   GOLD:   métricas agregadas (día, hora, zona, vehículo) en caché, derivadas de Silver. */
+const BK='bitacora-bronze-v1',COLL=['incomes','expenses','shifts'];
+let B=(()=>{try{return JSON.parse(localStorage.getItem(BK))||[]}catch(e){return[]}})(),prevSnap=null;
+const snapOf=s=>{const m={};COLL.forEach(c=>s[c].forEach(x=>m[c+':'+x.id]=JSON.stringify(x)));return m};
+const cfgOf=s=>JSON.stringify({settings:s.settings,meta:s.meta,zones:s.zones,vehicles:s.vehicles});
+function toBronze(){
+  const cur=snapOf(S),t=new Date().toISOString(),ev=[],p=prevSnap||{};
+  for(const k in cur){if(!(k in p))ev.push({t,op:'ins',k,d:JSON.parse(cur[k])});else if(p[k]!==cur[k])ev.push({t,op:'upd',k,d:JSON.parse(cur[k])})}
+  for(const k in p)if(!(k in cur))ev.push({t,op:'del',k});
+  const cfg=cfgOf(S);if(cfg!==toBronze.cfg){ev.push({t,op:'cfg',d:JSON.parse(cfg)});toBronze.cfg=cfg}
+  prevSnap=cur;
+  if(ev.length){B.push(...ev);try{localStorage.setItem(BK,JSON.stringify(B))}catch(e){}}
+}
+function silverClean(o){
+  const seen=new Set(),okd=x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.date||'');
+  COLL.forEach(c=>{o[c]=(o[c]||[]).map(x=>x&&!x.id?{...x,id:uid()}:x).filter(x=>{if(!okd(x)||seen.has(c+x.id))return false;seen.add(c+x.id);return true}).map(x=>{if('amount' in x)x.amount=Math.max(0,+x.amount||0);if(x.note)x.note=String(x.note).trim();return x})});
+  return o}
+function replay(ev){
+  const o={incomes:[],expenses:[],shifts:[],meta:{},settings:{}};
+  ev.forEach(e=>{
+    if(e.op==='cfg'){o.meta=e.d.meta;o.settings=e.d.settings;o.zones=e.d.zones;o.vehicles=e.d.vehicles;return}
+    const[c,id]=e.k.split(':');
+    if(e.op==='del')o[c]=o[c].filter(x=>x.id!==id);
+    else if(e.op==='ins'){if(!o[c].some(x=>x.id===id))o[c].push(e.d)}
+    else o[c]=o[c].map(x=>x.id===id?e.d:x)});
+  return norm(silverClean(o))}
+let gv=0;const gc=new Map(),_ds=dayStats;
+dayStats=(d,v)=>{const k=d+'|'+(v||'all'),c=gc.get(k);if(c&&c.v===gv)return c.r;const r=_ds(d,v);gc.set(k,{v:gv,r});return r};
+function layersCard(){
+  const L=[['#b87333','Bronze','Cada acción guardada tal cual, sin borrarse',B.length+' eventos'],['#a8a9ad','Silver','Datos validados y normalizados',COLL.reduce((n,c)=>n+S[c].length,0)+' registros'],['#e0b13c','Gold','Métricas listas: Hoy y Análisis',allDates().length+' días agregados']];
+  return`<div class="card"><h3>Arquitectura de datos</h3>${L.map(l=>`<div class="row"><span class="dot" style="background:${l[0]};width:14px;height:14px"></span><div class="t"><b>${l[1]}</b><small>${l[2]}</small></div><span class="muted">${l[3]}</span></div>`).join('')}<button class="sec" data-act="expbronze" style="margin-top:10px">⬇ Exportar Bronze (JSON)</button></div>`}
+
 /* ========= Datos ========= */
 function seed(){
   const d='2026-11-25',h={5:27300,6:24800,7:16400,8:27300,9:6200,10:22500,11:5100};
@@ -158,9 +205,10 @@ function norm(o){
   [...o.incomes,...o.expenses,...o.shifts].forEach(x=>{if(!x.veh)x.veh=v0});
   return o;
 }
-function load(){try{const r=localStorage.getItem(KEY);if(r)return norm(JSON.parse(r))}catch(e){}return norm(seed())}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{if(B.length)return replay(B)}catch(e){}try{const r=localStorage.getItem(KEY);if(r)return norm(silverClean(JSON.parse(r)))}catch(e){}return norm(seed())}
+function save(){gv++;gc.clear();toBronze();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 let S=load(),view='hoy',regTab='via',cur=today(),per='7',gridDate=today(),gridPlat=S.settings.platform||'DiDi',showDemand=true,vf='all';
+if(B.length){prevSnap=snapOf(S);toBronze.cfg=cfgOf(S)}else{prevSnap={};toBronze.cfg='';toBronze()}
 
 /* ========= Cálculos ========= */
 function dayStats(d,v){
@@ -386,7 +434,7 @@ function viewAna(){
 }
 
 function viewHis(){
-  const ds=allDates().reverse().slice(0,90).map(dayStats);
+  const ds=allDates().reverse().slice(0,90).map(d=>dayStats(d));
   return`<div class="card"><h3>Historial por día</h3>${ds.map(s=>`<div class="row" data-open="${s.d}" style="cursor:pointer"><div class="t"><b>${longDate(s.d)}</b><small>${s.hours?num(s.hours)+' h':'—'}${s.km?' · '+num(s.km,0)+' km':''}${s.hours?' · '+money(s.total/s.hours)+'/h':''}</small></div><div style="text-align:right"><b class="${s.neto>=0?'pos':'neg'}">${money(s.neto)}</b><small class="muted" style="display:block">${money(s.total)} − ${money(s.gastos)}</small></div></div>`).join('')||'<p class="muted">Aún no hay registros.</p>'}</div>`;
 }
 
@@ -397,6 +445,7 @@ function viewAju(){
   <div class="card"><h3>Mínimo por km</h3><label>No aceptar viajes por debajo de (COP por km; 0 = sin mínimo)<input id="minKmIn" type="number" inputmode="numeric" value="${S.settings.minKm||''}" placeholder="Ej: 1800"></label><p class="muted" style="margin-top:0">Al guardar un viaje con km, la app te avisa si quedó bajo este mínimo.</p><button class="sec" data-act="savemin">Guardar mínimo</button></div>
   <div class="card"><h3>Precio de la gasolina</h3><label>Pesos por galón (Cali, gasolina corriente, noviembre 2026: $16.339 de referencia)<input id="fuelIn" type="number" inputmode="numeric" value="${S.settings.fuelPrice}"></label><p class="muted" style="margin-top:0">Convierte pesos a galones al registrar gasolina. Cada tanqueo guarda el precio de ese momento, así el historial no cambia si lo actualizas.</p><button class="sec" data-act="savefuel">Guardar precio</button></div>
   <div class="card"><h3>Mis vehículos</h3>${S.vehicles.map(v=>`<div class="row"><div class="t">${vName(v.id)}</div><button class="x" data-act="delveh" data-id="${v.id}">✕</button></div>`).join('')}<div class="form" style="margin-top:10px"><label>Nombre<input id="vName" placeholder="Ej: Renault Logan 2018"></label><label>Tipo<select id="vType"><option value="carro">Carro</option><option value="moto">Moto</option></select></label></div><button class="sec" data-act="addveh">Agregar vehículo</button></div>
+  ${layersCard()}
   <div class="card"><h3>Respaldo</h3><p class="muted" style="margin-top:0">Tus datos viven solo en este navegador/celular. Descarga un respaldo de vez en cuando; así también puedes pasarlos a otro dispositivo.</p>
   <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="sec" data-act="expjson">⬇ Respaldo (JSON)</button><button class="sec" data-act="expcsv">⬇ Excel (CSV)</button><button class="sec" data-act="impjson">⬆ Restaurar</button></div>
   <input type="file" id="fileIn" accept="application/json" style="display:none"></div>
@@ -585,6 +634,7 @@ document.addEventListener('click',async e=>{
   if(a==='addveh'){const n=$('#vName').value.trim();if(!n)return toast('Escribe el nombre');S.vehicles.push({id:'v_'+uid(),name:n,type:$('#vType').value});save();toast('Vehículo agregado ✓');render()}
   if(a==='delveh'){if(S.vehicles.length<2)return toast('Debe quedar al menos un vehículo');if(await sheet('¿Quitar este vehículo? Sus registros se conservan.',{ok:'Quitar',danger:1})){S.vehicles=S.vehicles.filter(v=>v.id!==d.id);if(S.settings.vehicle===d.id)S.settings.vehicle=S.vehicles[0].id;save();render()}}
   if(a==='expjson')dl('bitacora-taxi-'+today()+'.json',JSON.stringify(S),'application/json');
+  if(a==='expbronze')dl('bitacora-bronze-'+today()+'.json',JSON.stringify(B),'application/json');
   if(a==='expcsv'){const r=[['tipo','fecha','hora','categoria','plataforma','metodo','monto','detalle']];
     S.incomes.forEach(x=>r.push(['ingreso',x.date,x.hour??'',x.kind,x.platform,x.method,x.amount,(x.trips||'')+(x.km?' | '+x.km+' km':'')+(x.min?' | '+x.min+' min':'')]));
     S.expenses.forEach(x=>r.push(['gasto',x.date,'',x.cat,'','',x.amount,(x.gal?x.gal+' gal ':'')+(x.note||'')]));
@@ -593,7 +643,7 @@ document.addEventListener('click',async e=>{
   if(a==='impjson')$('#fileIn').click();
   if(a==='wipe'&&await sheet('Se borrará TODO. ¿Seguro?',{ok:'Continuar',danger:1})&&await sheet('Última confirmación: ¿borrar todo?',{ok:'Borrar todo',danger:1})){S=norm({incomes:[],expenses:[],shifts:[],meta:{},settings:{goal:0,platform:'DiDi',name:''}});save();render()}
 });
-document.addEventListener('change',e=>{if(e.target.id==='fileIn'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.incomes||!o.expenses)throw 0;S=norm(o);save();toast('Respaldo restaurado ✓');render()}catch(x){toast('Archivo no válido')}};r.readAsText(f)}});
+document.addEventListener('change',e=>{if(e.target.id==='fileIn'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.incomes||!o.expenses)throw 0;S=norm(silverClean(o));save();toast('Respaldo restaurado ✓');render()}catch(x){toast('Archivo no válido')}};r.readAsText(f)}});
 function dl(name,txt,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
 render();
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
