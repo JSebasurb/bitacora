@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="description" content="Bitácora de ingresos, gastos y rendimiento para conductores de taxi y apps de transporte.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bitácora">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Bitácora Taxi</title>
+<style>
+:root{color-scheme:light dark;--bg:#f2f2f7;--card:#fff;--card2:#f2f2f7;--tx:#1c1c1e;--mu:#6e6e73;--ac:#f07c00;--ac2:#ff9500;--onac:#fff;--lav:#7d7aff;--gr:#2fa84f;--rd:#ff3b30;--bd:rgba(60,60,67,.16);--glass:rgba(249,249,251,.76);--seg:rgba(118,118,128,.14);--segon:#fff;--sh:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.05)}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--card2:#2c2c2e;--tx:#f5f5f7;--mu:#98989f;--ac:#ff9f0a;--ac2:#ffb340;--onac:#1a1100;--lav:#9d9aff;--gr:#32d74b;--rd:#ff453a;--bd:rgba(84,84,88,.5);--glass:rgba(22,22,24,.72);--seg:rgba(118,118,128,.28);--segon:#636366;--sh:none}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;padding-bottom:calc(92px + env(safe-area-inset-bottom));-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:5;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);padding:calc(10px + env(safe-area-inset-top)) 18px 10px;border-bottom:.5px solid var(--bd);display:flex;align-items:center;gap:10px}
+header h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
+header select{margin-left:auto;width:auto;max-width:62%;padding:7px 28px 7px 12px;font-size:14px;border-radius:20px;background-color:var(--seg)}
+main{max-width:640px;margin:0 auto;padding:14px 16px}
+.card{background:var(--card);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:var(--sh)}
+.card h3{margin:0 0 12px;font-size:13px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.04em}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;background:var(--card);border-radius:30px;padding:24px 18px 18px;margin-bottom:14px;box-shadow:var(--sh)}
+.medal{width:230px;height:230px;border-radius:50%;padding:9px;background:conic-gradient(from 210deg,#f6d36b,#b9831d,#fff0b0,#a8741a,#f6d36b);box-shadow:0 12px 32px rgba(184,131,29,.35),inset 0 0 0 1px rgba(255,255,255,.55)}
+.face{position:relative;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle at 50% 25%,var(--card),var(--card2));display:grid;place-items:center;box-shadow:inset 0 3px 10px rgba(0,0,0,.2)}
+.face svg{position:absolute;inset:15px;width:calc(100% - 30px);height:calc(100% - 30px);transform:rotate(-90deg)}
+.mt,.mp{fill:none;stroke-width:7}.mt{stroke:var(--bd)}.mp{stroke:var(--ac);stroke-linecap:round;animation:ring 1s cubic-bezier(.2,.8,.2,1)}
+@keyframes ring{from{stroke-dasharray:0 326.73}}
+.mc{position:relative;display:flex;flex-direction:column;gap:3px;max-width:132px}.mc small{color:var(--mu);font-size:12px;line-height:1.2}.mc b{font-weight:700;letter-spacing:-.03em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hero .sub{font-size:14px;color:var(--mu);margin-top:16px}
+.wbtn{border:0;border-radius:20px;padding:10px 22px;font-weight:600;font-size:15px;background:var(--card2);color:var(--ac);margin-top:12px}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(min-width:560px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--card);border-radius:18px;padding:13px 14px;box-shadow:var(--sh)}
+.kpi small{color:var(--mu);display:block;font-size:12px}.kpi b{font-size:20px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.kpi em{font-style:normal;color:var(--mu);font-size:11px;display:block}
+.pos{color:var(--gr)}.neg{color:var(--rd)}
+.datebar{display:flex;gap:8px;margin-bottom:12px}.datebar input{flex:1;text-align:center;background:var(--card);box-shadow:var(--sh)}
+.ic{width:48px;border:0;border-radius:14px;background:var(--card);color:var(--ac);font-size:24px;box-shadow:var(--sh)}
+input,select{background:var(--card2);color:var(--tx);border:0;border-radius:12px;padding:12px 14px;font:inherit;font-size:17px;width:100%;outline:0;-webkit-appearance:none;appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238e8e93' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+input:focus,select:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 35%,transparent)}
+input[type=checkbox]{width:auto;accent-color:var(--ac);-webkit-appearance:auto;appearance:auto}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:12px}label input,label select{margin-top:5px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.form .full{grid-column:1/-1}
+button{font-family:inherit;cursor:pointer;transition:transform .12s,opacity .12s}button:active{transform:scale(.97);opacity:.85}
+button.pri{width:100%;border:0;border-radius:14px;padding:15px;background:var(--ac);color:var(--onac);font-weight:600;font-size:17px;margin-top:4px}
+button.sec{border:0;background:var(--seg);color:var(--ac);border-radius:12px;padding:11px 16px;font-size:15px;font-weight:500}
+button.dng{border:0;background:color-mix(in srgb,var(--rd) 14%,transparent);color:var(--rd);border-radius:12px;padding:11px 16px;font-size:15px;font-weight:500}
+.seg{display:flex;background:var(--seg);border-radius:11px;padding:2px;margin-bottom:14px;gap:2px}
+.seg button{flex:1;border:0;background:none;color:var(--tx);padding:8px 2px;border-radius:9px;font-size:13px;font-weight:500}
+.seg button.on{background:var(--segon);box-shadow:0 2px 6px rgba(0,0,0,.14);font-weight:600}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--glass);-webkit-backdrop-filter:saturate(180%) blur(22px);backdrop-filter:saturate(180%) blur(22px);display:flex;border-top:.5px solid var(--bd);padding-bottom:env(safe-area-inset-bottom);z-index:6}
+nav button{flex:1;border:0;background:none;color:var(--mu);padding:8px 0 6px;font-size:10px;font-weight:500}
+nav button svg{width:26px;height:26px;display:block;margin:0 auto 2px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--ac)}
+.chartwrap{overflow-x:auto;padding-bottom:4px}svg text.v{fill:var(--tx);font-size:10px;text-anchor:middle}svg text.l{fill:var(--mu);font-size:11px;text-anchor:middle}
+.legend{font-size:12px;color:var(--mu);margin-top:6px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:.5px solid var(--bd)}.row:last-child{border:0}
+.row .t{flex:1;min-width:0}.row .t small{display:block;color:var(--mu);font-size:12px}
+.row .a{font-weight:600;font-variant-numeric:tabular-nums}.row .x{border:0;background:none;color:var(--mu);font-size:18px;padding:4px 8px}
+.hb{margin:10px 0}.hb div.n{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.hb div.b{height:8px;background:var(--card2);border-radius:8px;overflow:hidden}.hb div.b i{display:block;height:100%;background:var(--lav);border-radius:8px}
+.ins{padding:11px 13px;border-radius:14px;background:var(--card2);margin-bottom:8px;font-size:14px}
+.ins.good{box-shadow:inset 3px 0 var(--gr)}.ins.warn{box-shadow:inset 3px 0 var(--ac2)}.ins.info{box-shadow:inset 3px 0 var(--lav)}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}.hgrid label{margin:0}
+.chips{display:flex;gap:6px;margin-bottom:12px}.chips button{flex:1;border:0;background:var(--seg);color:var(--tx);border-radius:20px;padding:8px 0;font-size:13px;font-weight:500}
+.chips button.on{background:var(--ac);color:var(--onac)}
+.muted{color:var(--mu);font-size:13px}.vtag{font-size:12px;color:var(--mu)}
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(8px);background:var(--tx);color:var(--bg);padding:11px 18px;border-radius:22px;font-weight:600;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:30;max-width:90%;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%)}
+table.cmp{border-collapse:collapse;font-size:13px;min-width:560px}table.cmp th,table.cmp td{padding:9px 8px;border-bottom:.5px solid var(--bd);text-align:right;white-space:nowrap}table.cmp th:first-child,table.cmp td:first-child{text-align:left}table.cmp th{color:var(--mu);font-weight:600;font-size:12px}
+.amts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}.amts button{border:0;background:var(--card2);color:var(--tx);border-radius:14px;padding:14px 0;font-size:16px;font-weight:600}.amts button.on{background:var(--ac);color:var(--onac)}
+.heat{display:grid;gap:3px}.heat .hh{color:var(--mu);text-align:center;font-size:10px}.heat .hd{color:var(--mu);align-self:center;font-size:12px}.heat .hc{height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--tx);font-size:9px}.heat .hc.e{background:var(--card2)}
+.coach p{margin:6px 0;font-size:14px}.coach .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.qchips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.qchips button{border:0;background:var(--seg);color:var(--ac);border-radius:16px;padding:8px 12px;font-size:13px;font-weight:500}
+.chatrow{display:flex;gap:8px}.chatrow input{flex:1}
+.bq{background:var(--ac);color:var(--onac);border-radius:18px 18px 4px 18px;padding:8px 13px;margin:8px 0 4px 16%;font-size:14px}.ba{background:var(--card2);border-radius:18px 18px 18px 4px;padding:8px 13px;margin:4px 16% 8px 0;font-size:14px}
+.sh{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.shb{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;transition:.25s}.sh.on .shb{opacity:1}
+.shc{position:relative;width:100%;max-width:520px;background:var(--card);border-radius:26px 26px 0 0;padding:22px 16px calc(16px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1)}.sh.on .shc{transform:none}
+.shc h4{margin:0 0 14px;font-size:17px;text-align:center}.shc .sec{width:100%;margin-top:8px;padding:14px}.shc .dg{background:var(--rd);color:#fff}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header><h1>Bitácora</h1><select id="vehSel" aria-label="Vehículo activo"></select></header>
+<main id="app"></main>
+<nav id="nav" aria-label="Secciones">
+  <button data-view="hoy"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/></svg>Hoy</button>
+  <button data-view="reg"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Registrar</button>
+  <button data-view="ana"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>Análisis</button>
+  <button data-view="his"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Historial</button>
+  <button data-view="aju"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Ajustes</button>
+</nav>
+<div id="toast"></div>
+
+<script>
+/* ========= Utilidades ========= */
+const $=s=>document.querySelector(s);
+const KEY='bitacora-taxi-v1';
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ymd(new Date());
+const nowHM=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return ymd(d)};
+const dowOf=s=>new Date(s+'T12:00:00').getDay();
+const longDate=s=>new Date(s+'T12:00:00').toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'});
+const tmin=t=>{const[a,b]=t.split(':').map(Number);return a*60+b};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const sum=(a,k)=>a.reduce((s,x)=>s+(+x[k]||0),0);
+const money=n=>{n=Math.round(n||0);return (n<0?'-':'')+'$'+String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,'.')};
+const kfmt=v=>v>=1000?(v/1000).toFixed(1).replace(/\.0$/,'')+'k':String(Math.round(v));
+const hl=h=>h===0?'12 am':h<12?h+' am':h===12?'12 pm':(h-12)+' pm';
+const hs=h=>h===0?'12a':h<12?h+'a':h===12?'12p':(h-12)+'p';
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const num=(v,d=1)=>(+v).toFixed(d).replace(/\.0+$/,'');
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1800)}
+
+/* Referencia de demanda en Cali (0–5), estimada del gráfico que enviaste */
+const DEMAND={5:2,6:3,7:5,8:4,9:2,10:2,11:3,12:2,13:2,14:3,15:2,16:3,17:5,18:5,19:3,20:1,21:1,22:.5,23:.5};
+
+/* ========= Hoja de confirmación (estilo iOS) ========= */
+function sheet(msg,o={}){return new Promise(res=>{
+  const w=document.createElement('div');w.className='sh';w.setAttribute('role','dialog');
+  w.innerHTML=`<div class="shb"></div><div class="shc"><h4>${esc(msg)}</h4>${o.input!==undefined?`<input type="number" inputmode="numeric" value="${esc(o.input)}" placeholder="${esc(o.ph||'')}" style="margin-bottom:12px;text-align:center">`:''}<button class="pri${o.danger?' dg':''}">${o.ok||'Aceptar'}</button><button class="sec">Cancelar</button></div>`;
+  document.body.appendChild(w);requestAnimationFrame(()=>w.classList.add('on'));
+  const inp=w.querySelector('input'),done=v=>{w.classList.remove('on');setTimeout(()=>w.remove(),300);res(v)};
+  w.querySelector('.pri').onclick=()=>done(inp?inp.value:true);
+  w.querySelector('.sec').onclick=w.querySelector('.shb').onclick=()=>done(inp?null:false);
+  if(inp)setTimeout(()=>inp.focus(),120)})}
+
+/* ========= Datos ========= */
+function seed(){
+  const d='2026-11-25',h={5:27300,6:24800,7:16400,8:27300,9:6200,10:22500,11:5100};
+  return{
+    incomes:Object.entries(h).map(([hr,a])=>({id:uid(),date:d,hour:+hr,amount:a,kind:'viaje',method:'mixto',platform:'DiDi',src:'grid'})),
+    expenses:[],
+    shifts:[{id:uid(),date:d,start:'05:00',end:'11:40',kmIni:'',kmFin:'',km:0}],
+    meta:{[d]:{cash:81100}},
+    settings:{goal:0,platform:'DiDi'}
+  };
+}
+const defVeh=()=>[{id:'v_kia',name:'Kia Rio Xcite 2011',type:'carro'},{id:'v_hero',name:'Hero 99cc 2026',type:'moto'}];
+function norm(o){
+  o.settings=o.settings||{goal:0,platform:'DiDi'};o.meta=o.meta||{};
+  if(!o.vehicles||!o.vehicles.length)o.vehicles=defVeh();
+  if(!o.settings.fuelPrice)o.settings.fuelPrice=16339; /* Cali, gasolina corriente, nov-2026 (referencia) */
+  if(!o.zones)o.zones=['Norte','Sur','Centro','Oriente','Oeste','Aeropuerto'];
+  if(o.settings.name===undefined)o.settings.name='Sebas';
+  if(!o.vehicles.some(v=>v.id===o.settings.vehicle))o.settings.vehicle=o.vehicles[0].id;
+  const v0=o.settings.vehicle;
+  [...o.incomes,...o.expenses,...o.shifts].forEach(x=>{if(!x.veh)x.veh=v0});
+  return o;
+}
+function load(){try{const r=localStorage.getItem(KEY);if(r)return norm(JSON.parse(r))}catch(e){}return norm(seed())}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load(),view='hoy',regTab='via',cur=today(),per='7',gridDate=today(),gridPlat=S.settings.platform||'DiDi',showDemand=true,vf='all';
+
+/* ========= Cálculos ========= */
+function dayStats(d,v){
+  const allv=!v||v==='all',m=x=>x.date===d&&(allv||x.veh===v);
+  const inc=S.incomes.filter(m),exp=S.expenses.filter(m),sh=S.shifts.filter(m);
+  const total=sum(inc,'amount'),gastos=sum(exp,'amount');
+  const byHour={};inc.forEach(x=>{if(x.hour!=null)byHour[x.hour]=(byHour[x.hour]||0)+x.amount});
+  const hrs=Object.keys(byHour).map(Number);
+  let range=null,hours=0;
+  if(sh.length){let a=1e9,b=-1e9;sh.forEach(s=>{const st=tmin(s.start)/60;let en=tmin(s.end)/60;if(en<=st)en+=24;a=Math.min(a,st);b=Math.max(b,en);hours+=en-st});range=[Math.floor(a),Math.min(24,Math.ceil(b))]}
+  else if(hrs.length){range=[Math.min(...hrs),Math.max(...hrs)+1];hours=range[1]-range[0]}
+  const cashEntries=sum(inc.filter(x=>x.method==='efectivo'),'amount');
+  const cash=(allv&&S.meta[d]&&S.meta[d].cash!=null)?S.meta[d].cash:cashEntries;
+  return{d,inc,exp,sh,total,gastos,neto:total-gastos,byHour,range,hours,km:sum(sh,'km'),cash,online:Math.max(0,total-cash),trips:sum(inc,'trips'),tvia:sum(inc.filter(x=>x.trips>0),'amount'),tkm:sum(inc.filter(x=>x.km>0),'km'),tamt:sum(inc.filter(x=>x.km>0),'amount'),inferred:!sh.length};
+}
+function allDates(){const s=new Set();[...S.incomes,...S.expenses,...S.shifts].forEach(x=>s.add(x.date));return[...s].sort()}
+function periodDates(){
+  const all=allDates(),t=today();
+  if(per==='1')return all.filter(d=>d===t);
+  if(per==='all')return all;
+  const from=addDays(t,-(+per-1));return all.filter(d=>d>=from&&d<=t);
+}
+
+/* ========= Gráficas SVG ========= */
+function bars(labels,vals,o={}){
+  const n=labels.length,slot=o.slot||(n>10?34:n>6?46:58),W=n*slot+10,H=o.h||190,top=20,bot=22,ch=H-top-bot;
+  const max=Math.max(...vals,1);let g='';
+  vals.forEach((v,i)=>{
+    const bh=v/max*ch,x=5+i*slot+slot*.15,w=slot*.7,y=top+ch-bh;
+    g+=`<rect x="${x}" y="${y}" width="${w}" height="${Math.max(bh,v>0?2:0)}" rx="5" fill="${i===o.best?'#ff8a3d':'#b8b4f5'}"/>`;
+    if(v>0)g+=`<text class="v" x="${x+w/2}" y="${y-4}">${kfmt(v)}</text>`;
+    g+=`<text class="l" x="${x+w/2}" y="${H-6}">${labels[i]}</text>`;
+  });
+  if(o.overlay){
+    const pts=o.overlay.map((d,i)=>[5+i*slot+slot/2,top+ch-(d/5)*ch]);
+    g+=`<polyline fill="none" stroke="#3ecf8e" stroke-width="2" stroke-dasharray="4 3" points="${pts.map(p=>p.join(',')).join(' ')}"/>`;
+    pts.forEach(p=>g+=`<circle cx="${p[0]}" cy="${p[1]}" r="2.5" fill="#3ecf8e"/>`);
+  }
+  return`<div class="chartwrap"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${g}</svg></div>`;
+}
+function hbars(items,fmt=money){
+  const max=Math.max(...items.map(i=>i[1]),1);
+  return items.map(([n,v])=>`<div class="hb"><div class="n"><span>${esc(n)}</span><b>${fmt(v)}</b></div><div class="b"><i style="width:${v/max*100}%"></i></div></div>`).join('')||'<p class="muted">Sin datos aún.</p>';
+}
+const vById=id=>S.vehicles.find(v=>v.id===id);
+const vName=id=>{const v=vById(id);return v?(v.type==='moto'?'🏍 ':'🚗 ')+v.name:'—'};
+const actV=()=>S.settings.vehicle;
+function dayVehCard(s){const first=[...s.inc,...s.exp,...s.sh][0];if(!first)return'';
+  return`<div class="card" style="display:flex;align-items:center;gap:10px"><span class="vtag" style="white-space:nowrap">Vehículo del día</span><select id="dayVeh">${S.vehicles.map(v=>`<option value="${v.id}" ${v.id===first.veh?'selected':''}>${vName(v.id)}</option>`).join('')}</select></div>`}
+const kpi=(l,v,s,c)=>`<div class="kpi"><small>${l}</small><b class="${c||''}">${v}</b>${s?`<em>${s}</em>`:''}</div>`;
+
+/* ========= Vistas ========= */
+function viewHoy(){
+  const s=dayStats(cur),g=+S.settings.goal||0,pct=g?Math.min(100,s.total/g*100):0;
+  const ph=s.hours>0?s.total/s.hours:0;
+  const hrsKeys=Object.keys(s.byHour).map(Number).sort((a,b)=>a-b);
+  let chart='<p class="muted">Aún no hay ingresos con hora para este día.</p>';
+  if(hrsKeys.length){const a=hrsKeys[0],b=hrsKeys[hrsKeys.length-1],labs=[],vals=[];for(let h=a;h<=b;h++){labs.push(hs(h));vals.push(s.byHour[h]||0)}
+    const mx=Math.max(...vals);chart=bars(labs,vals,{best:vals.indexOf(mx)})}
+  const items=[
+    ...s.inc.map(x=>({t:x.hour!=null?x.hour*60:-1,k:'inc:'+x.id,ic:x.kind==='viaje'?'🟢':x.kind==='premio'?'🏆':x.kind==='propina'?'💵':'↩',l:`${cap(x.kind)} · ${esc(x.platform)}`,sm:`${x.hour!=null?hl(x.hour):'sin hora'} · ${x.method==='linea'?'en línea':x.method}${x.trips?' · '+x.trips+' viaje(s)':''}${x.km?' · '+x.km+' km':''}${x.min?' · '+x.min+' min':''}${x.zone?' · '+esc(x.zone):''}`,a:money(x.amount),c:'pos'})),
+    ...s.exp.map(x=>({t:-2,k:'exp:'+x.id,ic:x.cat==='Gasolina'?'⛽':'🧾',l:x.cat,sm:(x.gal?num(x.gal,2)+' gal · '+money(x.amount/x.gal)+'/gal · ':'')+esc(x.note),a:'-'+money(x.amount),c:'neg'})),
+    ...s.sh.map(x=>({t:-3,k:'sh:'+x.id,ic:'⏱',l:`Jornada ${x.start}–${x.end}`,sm:(x.km?x.km+' km':'sin km')+' · '+vName(x.veh),a:'',c:''}))
+  ].sort((a,b)=>b.t-a.t);
+  return`
+  ${cur===today()?coachCard():''}
+  <div class="datebar"><button class="ic" data-act="prev">‹</button><input type="date" id="curDate" value="${cur}"><button class="ic" data-act="next">›</button></div>
+  <section class="hero"><div class="medal"><div class="face"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="mt" cx="60" cy="60" r="52"/><circle class="mp" cx="60" cy="60" r="52" style="stroke-dasharray:${(g?pct:0)*3.2673} 326.73"/></svg><div class="mc"><small>Ganancias ${cur===today()?'de hoy':longDate(cur)}</small><b style="font-size:${money(s.total).length>9?22:money(s.total).length>7?28:34}px">${money(s.total)}</b><small>${g?pct.toFixed(0)+'% de la meta':'Sin meta diaria'}</small></div></div></div>
+  ${g?`<div class="sub">${s.total<g?'Faltan '+money(g-s.total)+' para '+money(g):'¡Meta cumplida! 🎉'}</div>`:''}
+  <button class="wbtn" data-act="goal">${g?'Cambiar meta diaria':'Definir meta diaria'}</button></section>
+  <div class="kpis">
+    ${kpi('Efectivo',money(s.cash))}${kpi('En línea',money(s.online))}
+    ${kpi('Gastos',money(s.gastos),'','neg')}${kpi('Ganancia neta',money(s.neto),'',s.neto>=0?'pos':'neg')}
+    ${kpi('Horas',s.hours?num(s.hours):'—',s.inferred&&s.hours?'estimadas':'')}${kpi('$ por hora',ph?money(ph):'—')}
+    ${kpi('Km',s.km?num(s.km,0):'—')}${kpi('$ por km',s.km?money(s.total/s.km):'—')}
+    ${kpi('Viajes',s.trips||'—')}${kpi('Ticket promedio',s.trips?money(s.tvia/s.trips):'—')}
+    ${kpi('Km con pasajero',s.tkm?num(s.tkm,0):'—')}${kpi('$ por km (pasajero)',s.tkm?money(s.tamt/s.tkm):'—')}
+  </div>
+  ${dayVehCard(s)}
+  <div class="card"><h3>Ganancia por hora</h3>${chart}</div>
+  <div class="card"><h3>Movimientos del día</h3>${items.map(i=>`<div class="row"><span>${i.ic}</span><div class="t">${i.l}<small>${i.sm}</small></div><span class="a ${i.c}">${i.a}</span><button class="x" data-del="${i.k}">✕</button></div>`).join('')||'<p class="muted">Sin movimientos. Ve a <b>Registrar</b>.</p>'}</div>`;
+}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+function viewReg(){
+  const tabs=[['via','Viaje'],['ing','Ingreso'],['gas','Gasto'],['jor','Jornada'],['dia','Por horas']];
+  const seg=`<div class="seg">${tabs.map(t=>`<button data-reg="${t[0]}" class="${regTab===t[0]?'on':''}">${t[1]}</button>`).join('')}</div><div class="vtag" style="margin:-6px 4px 12px">Registrando en: <b>${vName(actV())}</b> · cámbialo arriba</div>`;
+  const plats=['DiDi','Uber','inDrive','Cabify','Otra'];
+  const popt=(sel)=>plats.map(p=>`<option ${p===sel?'selected':''}>${p}</option>`).join('');
+  if(regTab==='via'){
+    const amts=[4000,5000,6000,8000,10000,12000,15000,20000],lm=S.settings.lastMethod||'efectivo',td=dayStats(today());
+    return seg+`<form id="fVia" class="card">
+    <div style="text-align:center;margin-bottom:8px"><div class="muted">Valor del viaje</div><div id="vAmt" style="font-size:40px;font-weight:800">$0</div></div>
+    <div class="amts">${amts.map(a=>`<button type="button" data-amt="${a}">${kfmt(a)}</button>`).join('')}</div>
+    <label>Otro valor (COP)<input name="amount" type="number" inputmode="numeric" min="0" step="100"></label>
+    <div class="form"><label>Km del viaje (opcional)<input name="km" type="number" inputmode="decimal" step="0.1" min="0"></label>
+    <label>Minutos (opcional)<input name="min" type="number" inputmode="numeric" min="0"></label></div>
+    <div class="seg" style="margin-bottom:10px"><button type="button" data-meth="efectivo" class="${lm==='efectivo'?'on':''}">Efectivo</button><button type="button" data-meth="linea" class="${lm==='linea'?'on':''}">En línea</button></div>
+    <label>Plataforma<select name="platform">${popt(S.settings.platform)}</select></label>
+    <div class="muted" style="margin:4px 0 6px;font-size:12px">Zona donde lo recogí</div>
+    <div class="amts" style="grid-template-columns:repeat(3,1fr)">${S.zones.map(z=>`<button type="button" data-zone="${esc(z)}" class="${z===S.settings.lastZone?'on':''}">${esc(z)}</button>`).join('')}</div>
+    <input type="hidden" name="zone" value="${esc(S.settings.lastZone||'')}">
+    <input type="hidden" name="meth" value="${lm}">
+    <button class="pri">Guardar viaje ahora</button>
+    <p class="muted" id="viaFb" style="text-align:center;margin:10px 0 0">${td.trips} viaje(s) hoy · ${money(td.total)}</p></form>`;
+  }
+  if(regTab==='ing')return seg+`<form id="fInc" class="card form">
+    <label>Fecha<input type="date" name="date" value="${cur}" required></label>
+    <label>Hora<input type="time" name="time" value="${nowHM()}" required></label>
+    <label class="full">Monto (COP)<input name="amount" type="number" inputmode="numeric" min="0" step="100" placeholder="12000" required></label>
+    <label>Tipo<select name="kind"><option value="viaje">Viaje</option><option value="propina">Propina</option><option value="premio">Premio / bono</option><option value="reembolso">Reembolso</option><option value="otro">Otro</option></select></label>
+    <label>Método<select name="method"><option value="efectivo">Efectivo</option><option value="linea">En línea</option></select></label>
+    <label>Plataforma<select name="platform">${popt(S.settings.platform)}</select></label>
+    <label>Nº de viajes<input name="trips" type="number" inputmode="numeric" min="0" value="1"></label>
+    <label>Zona<select name="zone"><option value="">—</option>${S.zones.map(z=>`<option>${esc(z)}</option>`).join('')}</select></label>
+    <button class="pri full">Guardar ingreso</button></form>`;
+  if(regTab==='gas')return seg+`<form id="fGas" class="card form">
+    <label>Fecha<input type="date" name="date" value="${cur}" required></label>
+    <label>Categoría<select name="cat" onchange="document.getElementById('galw').style.display=this.value==='Gasolina'?'':'none'"><option>Gasolina</option><option>Peaje</option><option>Parqueadero</option><option>Lavado</option><option>Comida</option><option>Mantenimiento</option><option>Alquiler / cuota vehículo</option><option>Otro</option></select></label>
+    <label>Monto (COP)<input name="amount" type="number" inputmode="numeric" min="0" step="100" required></label>
+    <div id="galw" class="full muted" style="margin:-4px 0 12px">⛽ <span id="galTxt">Escribe el monto y calculo los galones</span> · precio ref. ${money(S.settings.fuelPrice)}/gal</div>
+    <label class="full">Nota (opcional)<input name="note" maxlength="80"></label>
+    <button class="pri full">Guardar gasto</button></form>`;
+  if(regTab==='jor'){
+    const last=[...S.shifts].filter(x=>x.kmFin&&x.veh===actV()).sort((a,b)=>(a.date+a.end).localeCompare(b.date+b.end)).pop();
+    return seg+`<form id="fJor" class="card form">
+    <label class="full">Fecha<input type="date" name="date" value="${cur}" required></label>
+    <label>Inicio<input type="time" name="start" value="05:00" required></label>
+    <label>Fin<input type="time" name="end" value="${nowHM()}" required></label>
+    <label>Odómetro inicial<input name="kmIni" type="number" inputmode="numeric" value="${last?last.kmFin:''}"></label>
+    <label>Odómetro final<input name="kmFin" type="number" inputmode="numeric"></label>
+    <label class="full">Km recorridos (se calcula solo con el odómetro)<input name="km" type="number" inputmode="decimal" step="0.1"></label>
+    <button class="pri full">Guardar jornada</button></form>`;
+  }
+  /* día por horas */
+  const ex=S.incomes.filter(x=>x.date===gridDate&&x.src==='grid'&&x.platform===gridPlat),exm={};ex.forEach(x=>exm[x.hour]=(exm[x.hour]||0)+x.amount);
+  const cash=S.meta[gridDate]&&S.meta[gridDate].cash!=null?S.meta[gridDate].cash:'';
+  let cells='';for(let h=4;h<24;h++)cells+=`<label>${hl(h)}<input name="h${h}" type="number" inputmode="numeric" min="0" value="${exm[h]||''}"></label>`;
+  return seg+`<form id="fDia" class="card"><p class="muted" style="margin-top:0">Pasa aquí la gráfica por hora de tu app (como la de DiDi). Guardar reemplaza lo cargado antes para ese día y plataforma.</p>
+    <div class="form"><label>Fecha<input type="date" id="gDate" value="${gridDate}"></label>
+    <label>Plataforma<select id="gPlat">${plats.map(p=>`<option ${p===gridPlat?'selected':''}>${p}</option>`).join('')}</select></label></div>
+    <div class="hgrid">${cells}</div>
+    <label style="margin-top:12px">Ganancias en efectivo del día (opcional)<input name="cash" type="number" inputmode="numeric" value="${cash}"></label>
+    <div style="display:flex;justify-content:space-between;margin:6px 0 10px"><span class="muted">Total del día</span><b id="gTot">$0</b></div>
+    <button class="pri">Guardar día</button></form>`;
+}
+
+function analysis(){
+  const dates=periodDates(),st=dates.map(d=>dayStats(d,vf)).filter(s=>s.inc.length||s.exp.length||s.sh.length);
+  const sumH=Array(24).fill(0),nH=Array(24).fill(0);
+  st.forEach(s=>{if(!s.range)return;for(let h=s.range[0];h<Math.min(24,s.range[1]);h++){sumH[h]+=s.byHour[h]||0;nH[h]++}});
+  const avg=sumH.map((v,i)=>nH[i]?v/nH[i]:null);
+  return{st,dates,avg,nH};
+}
+function viewAna(){
+  const{st,dates,avg,nH}=analysis();
+  const chips=[['1','Hoy'],['7','7 días'],['30','30 días'],['all','Todo']].map(c=>`<button data-per="${c[0]}" class="${per===c[0]?'on':''}">${c[1]}</button>`).join('')+'</div><div class="chips">'+[['all','Todos'],...S.vehicles.map(v=>[v.id,(v.type==='moto'?'🏍 ':'🚗 ')+v.name.split(' ').slice(0,2).join(' ')])].map(c=>`<button data-vf="${c[0]}" class="${vf===c[0]?'on':''}">${c[1]}</button>`).join('');
+  const total=sum(st,'total'),gastos=sum(st,'gastos'),hours=sum(st,'hours'),km=sum(st,'km');
+  const fuel=st.flatMap(s=>s.exp.filter(x=>x.cat==='Gasolina')),fuelCost=sum(fuel,'amount'),gal=sum(fuel,'gal');
+  const days=st.filter(s=>s.total>0).length;
+  if(!st.length)return`<div class="chips">${chips}</div><div class="card"><p class="muted">No hay datos en este periodo.</p></div>`;
+  const act=[];avg.forEach((v,h)=>{if(v!=null)act.push(h)});
+  const lo=Math.min(5,...(act.length?act:[5])),hi=Math.max(22,...(act.length?act:[22]));
+  const labs=[],vals=[],dem=[];for(let h=lo;h<=hi;h++){labs.push(hs(h));vals.push(avg[h]||0);dem.push(DEMAND[h]??0.5)}
+  const bestI=act.length?vals.indexOf(Math.max(...vals)):-1;
+  /* insights */
+  const ins=[];
+  if(act.length>=2){
+    const ranked=[...act].sort((a,b)=>avg[b]-avg[a]);
+    ins.push(`<div class="ins good">🔥 <b>Tu mejor hora: ${hl(ranked[0])}</b> con ${money(avg[ranked[0]])} en promedio${ranked[1]!=null?`. Le siguen ${ranked.slice(1,3).map(h=>hl(h)+' ('+money(avg[h])+')').join(' y ')}`:''}.</div>`);
+    let bw=null;for(let h=0;h<22;h++)if(nH[h]&&nH[h+1]&&nH[h+2]){const v=avg[h]+avg[h+1]+avg[h+2];if(!bw||v>bw.v)bw={h,v}}
+    if(bw)ins.push(`<div class="ins good">⏰ <b>Mejor franja de 3 horas: ${hl(bw.h)} – ${hl(bw.h+3)}</b> (≈ ${money(bw.v)} por franja).</div>`);
+    const meanAvg=act.reduce((s,h)=>s+avg[h],0)/act.length;
+    const weak=act.filter(h=>avg[h]<meanAvg*.6).sort((a,b)=>avg[a]-avg[b]);
+    if(weak.length)ins.push(`<div class="ins warn">😴 <b>Horas flojas:</b> ${weak.slice(0,3).map(h=>hl(h)+' ('+money(avg[h])+')').join(', ')}. Buen momento para descansar, comer o tanquear.</div>`);
+    const opp=[];for(let h=5;h<=22;h++)if(DEMAND[h]>=4&&(!nH[h]||avg[h]<meanAvg*.8))opp.push(h);
+    if(opp.length)ins.push(`<div class="ins info">📍 <b>Oportunidad:</b> en Cali la demanda suele ser alta a las ${opp.map(hl).join(', ')} y ahí no registraste actividad o rendiste poco.</div>`);
+  }else ins.push(`<div class="ins info">Registra más horas y días: con la gráfica por hora de tu app empiezo a detectar tus mejores franjas.</div>`);
+  const g=+S.settings.goal||0;
+  if(g&&hours>0&&days){const ph=total/hours;ins.push(`<div class="ins info">🎯 A tu ritmo (${money(ph)}/h) necesitas ≈ <b>${num(g/ph)} h</b> para llegar a la meta diaria de ${money(g)}.</div>`)}
+  if(total>0&&gastos>0)ins.push(`<div class="ins ${gastos/total>.3?'warn':'info'}">🧾 Los gastos son el <b>${(gastos/total*100).toFixed(0)}%</b> de lo que ganas.</div>`);
+  if(days<3)ins.push(`<div class="muted">Basado en ${days} día(s): los promedios son orientativos y mejoran con más datos.</div>`);
+  /* día de la semana */
+  const cmpRows=S.vehicles.map(v=>{const ss=dates.map(d=>dayStats(d,v.id)).filter(s=>s.inc.length||s.exp.length||s.sh.length);if(!ss.length)return'';
+    const t=sum(ss,'total'),g=sum(ss,'gastos'),h=sum(ss,'hours'),k=sum(ss,'km'),fx=ss.flatMap(s=>s.exp.filter(x=>x.cat==='Gasolina')),fc=sum(fx,'amount'),fg=sum(fx,'gal');
+    return`<tr><td>${vName(v.id)}</td><td>${ss.length}</td><td>${money(t)}</td><td>${money(fc)}</td><td>${money(t-g)}</td><td>${h?money((t-g)/h):'—'}</td><td>${k&&fg?num(k/fg)+' km/gal':'—'}</td><td>${k&&fc?money(fc/k):'—'}</td></tr>`}).join('');
+  const wo=[1,2,3,4,5,6,0],wn=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const hsum=Array.from({length:7},()=>Array(24).fill(0)),hn=Array.from({length:7},()=>Array(24).fill(0));
+  st.forEach(s=>{if(!s.range)return;const w=dowOf(s.d);for(let h=s.range[0];h<Math.min(24,s.range[1]);h++){hsum[w][h]+=s.byHour[h]||0;hn[w][h]++}});
+  const hv=(w,h)=>hn[w][h]?hsum[w][h]/hn[w][h]:null;
+  let hmax=0;const hcells=[];wo.forEach(w=>{for(let h=5;h<=22;h++){const v=hv(w,h);if(v!=null){hmax=Math.max(hmax,v);hcells.push({w,h,v,n:hn[w][h]})}}});
+  const hm=hmax||1,topC=[...hcells].sort((a,b)=>b.v-a.v).slice(0,3);
+  const heat=`<div class="chartwrap"><div class="heat" style="grid-template-columns:34px repeat(18,30px)"><span></span>${Array.from({length:18},(_,i)=>`<span class="hh">${hs(i+5)}</span>`).join('')}${wo.map(w=>`<span class="hd">${wn[w]}</span>`+Array.from({length:18},(_,i)=>{const v=hv(w,i+5);return v==null?`<span class="hc e"></span>`:`<span class="hc" style="background:rgba(232,103,42,${(.15+.85*v/hm).toFixed(2)})">${v>0?kfmt(v):''}</span>`}).join('')).join('')}</div></div>`;
+  const zst={};st.forEach(s=>s.inc.forEach(x=>{if(!x.zone)return;const z=zst[x.zone]=zst[x.zone]||{n:0,a:0,k:0,ka:0};z.n+=x.trips||1;z.a+=x.amount;if(x.km>0){z.k+=x.km;z.ka+=x.amount}}));
+  const zrows=Object.entries(zst).sort((a,b)=>b[1].a-a[1].a),zmax=Math.max(...zrows.map(r=>r[1].a),1);
+  const tr=st.flatMap(s=>s.inc.filter(x=>x.trips>0)),trk=tr.filter(x=>x.km>0),mk=+S.settings.minKm||0;
+  const tN=sum(tr,'trips'),tV=sum(tr,'amount'),tK=sum(trk,'km'),tA=sum(trk,'amount'),below=mk?trk.filter(x=>x.amount/x.km<mk).length:0;
+  const wd=Array.from({length:7},()=>[]);st.filter(s=>s.total>0).forEach(s=>wd[dowOf(s.d)].push(s.total));
+  const order=[1,2,3,4,5,6,0],names=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const wv=order.map(i=>wd[i].length?wd[i].reduce((a,b)=>a+b,0)/wd[i].length:0);
+  const plat={};st.forEach(s=>s.inc.forEach(x=>plat[x.platform]=(plat[x.platform]||0)+x.amount));
+  const cats={};st.forEach(s=>s.exp.forEach(x=>cats[x.cat]=(cats[x.cat]||0)+x.amount));
+  return`<div class="chips">${chips}</div>
+  <div class="kpis">
+    ${kpi('Ingresos',money(total),days+' día(s) con datos')}${kpi('Gastos',money(gastos),'','neg')}
+    ${kpi('Neto',money(total-gastos),'',total-gastos>=0?'pos':'neg')}${kpi('$ por hora',hours?money(total/hours):'—',hours?num(hours)+' h':'')}
+    ${kpi('Neto por hora',hours?money((total-gastos)/hours):'—')}${kpi('Km',km?num(km,0):'—')}
+    ${kpi('Gasolina',money(fuelCost),gal?num(gal,2)+' gal':'')}${kpi('Gasolina por km',km&&fuelCost?money(fuelCost/km):'—')}
+    ${kpi('Rendimiento',km&&gal?num(km/gal)+' km/gal':'—','km por galón')}${kpi('Galones por día',days&&gal?num(gal/days,2):'—')}
+    ${kpi('Neto por km',km?money((total-gastos)/km):'—')}${kpi('Días',days)}
+  </div>
+  <div class="card"><h3>Promedio por hora del día</h3>${bars(labs,vals,{best:bestI,overlay:showDemand?dem:null,h:210})}
+    <div class="legend"><span class="dot" style="background:#b8b4f5"></span>Tu promedio por hora &nbsp; <span class="dot" style="background:#ff8a3d"></span>Mejor hora &nbsp; <span class="dot" style="background:#3ecf8e"></span>Demanda Cali (ref.)</div>
+    <label style="margin:10px 0 0;display:flex;gap:8px;align-items:center;color:var(--tx)"><input type="checkbox" id="chkDem" ${showDemand?'checked':''} style="width:auto;margin:0"> Mostrar curva de demanda de Cali</label></div>
+  <div class="card"><h3>Lo que dicen tus datos</h3>${ins.join('')}</div>
+  <div class="card"><h3>Zonas</h3>${zrows.map(([z,v])=>`<div class="hb"><div class="n"><span>${esc(z)} · ${v.n} viaje(s)</span><b>${money(v.a)}</b></div><div class="b"><i style="width:${v.a/zmax*100}%"></i></div><small class="muted">ticket ${money(v.a/v.n)}${v.k?' · '+money(v.ka/v.k)+'/km':''}</small></div>`).join('')||'<p class="muted">Aún no hay viajes con zona. Márcala al registrar cada viaje.</p>'}</div>
+  <div class="card"><h3>Mapa de calor (día × hora)</h3>${heat}<p class="muted" style="margin:8px 0 0">Más intenso = más ganancia promedio por hora. Gris = sin datos.${topC.length?` <br><b>Mejores combinaciones:</b> ${topC.map(c=>`${wn[c.w]} ${hl(c.h)} (${money(c.v)}${c.n<2?', 1 día':''})`).join(' · ')}`:''}</p></div>
+  <div class="card"><h3>Viajes</h3><div class="kpis" style="margin:0">${kpi('Viajes',tN||'—')}${kpi('Ticket promedio',tN?money(tV/tN):'—')}${kpi('$ por km (pasajero)',tK?money(tA/tK):'—',trk.length?trk.length+' viaje(s) con km':'')}${kpi('Bajo tu mínimo',mk&&trk.length?below+' de '+trk.length:'—',mk?'mín. '+money(mk)+'/km':'defínelo en Ajustes',below?'neg':'')}</div></div>
+  <div class="card"><h3>Comparar vehículos</h3><div class="chartwrap"><table class="cmp"><tr><th>Vehículo</th><th>Días</th><th>Ingresos</th><th>Gasolina</th><th>Neto</th><th>Neto/h</th><th>Rendim.</th><th>Gas/km</th></tr>${cmpRows}</table></div><p class="muted" style="margin-bottom:0">El rendimiento (km/gal) se afina con más días: necesita que registres tanto los km como los tanqueos.</p></div>
+  <div class="card"><h3>Promedio por día de la semana</h3>${bars(order.map(i=>names[i]),wv,{best:wv.some(v=>v>0)?wv.indexOf(Math.max(...wv)):-1,h:170})}</div>
+  <div class="card"><h3>Ingresos por plataforma</h3>${hbars(Object.entries(plat).sort((a,b)=>b[1]-a[1]))}</div>
+  <div class="card"><h3>Gastos por categoría</h3>${hbars(Object.entries(cats).sort((a,b)=>b[1]-a[1]))}</div>`;
+}
+
+function viewHis(){
+  const ds=allDates().reverse().slice(0,90).map(dayStats);
+  return`<div class="card"><h3>Historial por día</h3>${ds.map(s=>`<div class="row" data-open="${s.d}" style="cursor:pointer"><div class="t"><b>${longDate(s.d)}</b><small>${s.hours?num(s.hours)+' h':'—'}${s.km?' · '+num(s.km,0)+' km':''}${s.hours?' · '+money(s.total/s.hours)+'/h':''}</small></div><div style="text-align:right"><b class="${s.neto>=0?'pos':'neg'}">${money(s.neto)}</b><small class="muted" style="display:block">${money(s.total)} − ${money(s.gastos)}</small></div></div>`).join('')||'<p class="muted">Aún no hay registros.</p>'}</div>`;
+}
+
+function viewAju(){
+  return`<div class="card"><h3>Meta diaria</h3><label>Monto (COP)<input id="goalIn" type="number" inputmode="numeric" value="${S.settings.goal||''}" placeholder="150000"></label><button class="sec" data-act="savegoal">Guardar meta</button></div>
+  <div class="card"><h3>Zonas de Cali</h3><div class="qchips">${S.zones.map(z=>`<button class="sec" data-act="delzone" data-z="${esc(z)}">${esc(z)} ✕</button>`).join('')}</div><div style="display:flex;gap:8px"><input id="zName" placeholder="Ej: Zona sur"><button class="sec" data-act="addzone">Agregar</button></div></div>
+  <div class="card"><h3>Asistente</h3><label>Tu nombre (para el saludo)<input id="nameIn" value="${esc(S.settings.name)}"></label><button class="sec" data-act="savename">Guardar</button></div>
+  <div class="card"><h3>Mínimo por km</h3><label>No aceptar viajes por debajo de (COP por km; 0 = sin mínimo)<input id="minKmIn" type="number" inputmode="numeric" value="${S.settings.minKm||''}" placeholder="Ej: 1800"></label><p class="muted" style="margin-top:0">Al guardar un viaje con km, la app te avisa si quedó bajo este mínimo.</p><button class="sec" data-act="savemin">Guardar mínimo</button></div>
+  <div class="card"><h3>Precio de la gasolina</h3><label>Pesos por galón (Cali, gasolina corriente, noviembre 2026: $16.339 de referencia)<input id="fuelIn" type="number" inputmode="numeric" value="${S.settings.fuelPrice}"></label><p class="muted" style="margin-top:0">Convierte pesos a galones al registrar gasolina. Cada tanqueo guarda el precio de ese momento, así el historial no cambia si lo actualizas.</p><button class="sec" data-act="savefuel">Guardar precio</button></div>
+  <div class="card"><h3>Mis vehículos</h3>${S.vehicles.map(v=>`<div class="row"><div class="t">${vName(v.id)}</div><button class="x" data-act="delveh" data-id="${v.id}">✕</button></div>`).join('')}<div class="form" style="margin-top:10px"><label>Nombre<input id="vName" placeholder="Ej: Renault Logan 2018"></label><label>Tipo<select id="vType"><option value="carro">Carro</option><option value="moto">Moto</option></select></label></div><button class="sec" data-act="addveh">Agregar vehículo</button></div>
+  <div class="card"><h3>Respaldo</h3><p class="muted" style="margin-top:0">Tus datos viven solo en este navegador/celular. Descarga un respaldo de vez en cuando; así también puedes pasarlos a otro dispositivo.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="sec" data-act="expjson">⬇ Respaldo (JSON)</button><button class="sec" data-act="expcsv">⬇ Excel (CSV)</button><button class="sec" data-act="impjson">⬆ Restaurar</button></div>
+  <input type="file" id="fileIn" accept="application/json" style="display:none"></div>
+  <div class="card"><h3>Zona peligrosa</h3><button class="dng" data-act="wipe">Borrar todos los datos</button></div>
+  <p class="muted" style="text-align:center">La curva de demanda de Cali es una referencia aproximada; tus propios datos mandan.</p>`;
+}
+
+/* ========= Asistente (reglas locales, sin servidor) ========= */
+let chatLog=[];
+function hist(exclude){
+  const st=allDates().filter(d=>d!==exclude).map(d=>dayStats(d)).filter(s=>s.total>0);
+  const sumH=Array(24).fill(0),nH=Array(24).fill(0);
+  st.forEach(s=>{if(!s.range)return;for(let h=s.range[0];h<Math.min(24,s.range[1]);h++){sumH[h]+=s.byHour[h]||0;nH[h]++}});
+  const avg=sumH.map((v,i)=>nH[i]?v/nH[i]:null),act=[];avg.forEach((v,i)=>{if(v!=null)act.push(i)});
+  const mean=act.length?act.reduce((a,i)=>a+avg[i],0)/act.length:0;
+  return{st,avg,nH,act,mean};
+}
+const bandOf=h=>h<10?0:h<14?1:h<20?2:3;
+const bandName=h=>['la mañana (5–9 am)','el mediodía (10 am–1 pm)','la tarde (2–7 pm)','la noche'][bandOf(h)];
+function statusMsg(){
+  const t=today(),s=dayStats(t),g=+S.settings.goal||0,h=new Date().getHours(),H=hist(t);
+  let m=`Hoy llevas ${money(s.total)}`+(s.hours?` en ${num(s.hours)} h (${money(s.total/s.hours)}/h)`:'')+'.';
+  if(g)m+=s.total>=g?' ¡Ya cumpliste la meta! 🎉':` Te faltan ${money(g-s.total)} para tu meta de ${money(g)}.`;
+  if(H.st.length>=2){const typ=H.st.reduce((a,d)=>{let v=0;for(let x=0;x<=h;x++)v+=d.byHour[x]||0;return a+v},0)/H.st.length;
+    if(typ>0){const r=s.total/typ;m+=r>=1.1?` Vas ${Math.round((r-1)*100)}% por encima de tu ritmo habitual a esta hora 💪.`:r<=.9?` Vas ${Math.round((1-r)*100)}% por debajo de tu ritmo habitual a esta hora.`:' Vas en tu ritmo habitual.'}}
+  return m;
+}
+function nowMsg(){
+  const h=new Date().getHours(),H=hist(null),a=H.avg[h],d=DEMAND[h];
+  let m=`Son las ${hl(h)}. `;
+  if(a!=null&&H.st.length)m+=`A esta hora sueles hacer ${money(a)}/h. `;
+  if(d!=null)m+=`La demanda típica en Cali es ${d>=4?'alta':d>=3?'media':'baja'}. `;
+  const strong=(a!=null&&a>=H.mean*1.1)||d>=4,weak=(a!=null&&H.st.length>=2&&a<H.mean*.6)||(d!=null&&d<=2&&(a==null||a<H.mean));
+  if(strong)m+='Buen momento para estar en la calle.';else if(weak)m+='Hora floja: buena para descansar, comer o tanquear.';
+  for(let x=h+1;x<=22;x++)if(DEMAND[x]>=4){m+=` El próximo pico fuerte es a las ${hl(x)}.`;break}
+  return m.replace(/\s+/g,' ').trim();
+}
+function zoneRank(h){
+  const b=bandOf(h),z={};
+  S.incomes.forEach(x=>{if(!x.zone||x.hour==null||bandOf(x.hour)!==b)return;const o=z[x.zone]=z[x.zone]||{n:0,a:0};o.n+=x.trips||1;o.a+=x.amount});
+  return Object.entries(z).map(([k,v])=>({z:k,n:v.n,t:v.a/v.n})).sort((a,b)=>b.t-a.t);
+}
+function zoneMsg(){
+  const h=new Date().getHours(),r=zoneRank(h);
+  if(!r.length)return `Aún no tengo viajes con zona para ${bandName(h)}. Marca la zona en cada viaje (Registrar → Viaje) y te digo dónde te va mejor.`;
+  const top=r.filter(x=>x.n>=2)[0]||r[0];
+  let m=`Para ${bandName(h)}, la zona con mejor ticket es ${esc(top.z)}: ${money(top.t)} por viaje (${top.n} viaje${top.n>1?'s':''}).`;
+  const sec=r.find(x=>x!==top);if(sec)m+=` Le sigue ${esc(sec.z)} con ${money(sec.t)}.`;
+  if(top.n<3)m+=' Son pocos viajes: tómalo como pista, no como regla.';
+  return m;
+}
+function restMsg(){
+  const H=hist(null);let m='';
+  if(H.act.length>=3){const w=H.act.filter(i=>H.avg[i]<H.mean*.6).sort((a,b)=>H.avg[a]-H.avg[b]).slice(0,3);if(w.length)m+=`Tus horas más flojas son ${w.map(hl).join(', ')}. `}
+  return m+'En Cali la demanda suele bajar entre 9 y 10 am, de 12 a 1 pm y después de las 8 pm: buenas ventanas para descansar, almorzar o tanquear.';
+}
+function bestMsg(){
+  const H=hist(null);if(H.act.length<2)return 'Aún necesito más horas registradas para decirte cuáles son tus mejores.';
+  const r=[...H.act].sort((a,b)=>H.avg[b]-H.avg[a]).slice(0,3);
+  let m=`Tus mejores horas: ${r.map(h=>hl(h)+' ('+money(H.avg[h])+')').join(', ')}.`;
+  let bw=null;for(let h=0;h<22;h++)if(H.nH[h]&&H.nH[h+1]&&H.nH[h+2]){const v=H.avg[h]+H.avg[h+1]+H.avg[h+2];if(!bw||v>bw.v)bw={h,v}}
+  if(bw)m+=` Mejor franja de 3 horas: ${hl(bw.h)} a ${hl(bw.h+3)}.`;
+  return m;
+}
+function goalMsg(){
+  const s=dayStats(today()),g=+S.settings.goal||0;
+  if(!g)return 'Aún no tienes meta diaria. Defínela con el botón naranja de Hoy y te digo cuánto te falta.';
+  if(s.total>=g)return '¡Ya cumpliste la meta de hoy! 🎉 Todo lo que sumes ahora es extra.';
+  const H=hist(null),hrs=sum(H.st,'hours'),ph=s.hours>0?s.total/s.hours:(hrs?sum(H.st,'total')/hrs:0),left=g-s.total;
+  if(!ph)return `Te faltan ${money(left)}. Registra unas horas más para estimar cuánto tardas.`;
+  let m=`Te faltan ${money(left)}. A tu ritmo de ${money(ph)}/h son unas ${num(left/ph)} horas más.`;
+  const tv=sum(S.incomes.filter(x=>x.trips>0),'amount'),tn=sum(S.incomes.filter(x=>x.trips>0),'trips');
+  if(tn)m+=` Con tu ticket promedio de ${money(tv/tn)}, serían ≈ ${Math.ceil(left/(tv/tn))} viajes.`;
+  return m;
+}
+function vehMsg(){
+  const rows=S.vehicles.map(v=>{const ss=allDates().map(d=>dayStats(d,v.id)).filter(s=>s.total>0);if(!ss.length)return null;const h=sum(ss,'hours');return{v,days:ss.length,nh:h?(sum(ss,'total')-sum(ss,'gastos'))/h:0}}).filter(Boolean).sort((a,b)=>b.nh-a.nh);
+  if(rows.length<2)return rows.length?`Solo tengo datos de ${esc(rows[0].v.name)}. Usa el otro vehículo unos días para poder comparar el neto por hora.`:'Aún no tengo datos para comparar vehículos.';
+  return `Hasta ahora ${esc(rows[0].v.name)} te deja más: ${money(rows[0].nh)}/h neto contra ${money(rows[1].nh)}/h de ${esc(rows[1].v.name)} (${rows[0].days} y ${rows[1].days} día(s) de datos). Con pocos días es solo una pista.`;
+}
+function fuelMsg(){
+  const from=addDays(today(),-6),ss=allDates().filter(d=>d>=from).map(d=>dayStats(d)),fx=ss.flatMap(s=>s.exp.filter(x=>x.cat==='Gasolina'));
+  const c=sum(fx,'amount'),g=sum(fx,'gal'),t=sum(ss,'total'),k=sum(ss,'km');
+  if(!c)return 'No tienes tanqueos registrados en los últimos 7 días.';
+  let m=`En 7 días gastaste ${money(c)} en gasolina (≈ ${num(g,2)} gal).`;
+  if(t)m+=` Es el ${(c/t*100).toFixed(0)}% de tus ingresos.`;
+  if(k&&g)m+=` Rendimiento ≈ ${num(k/g)} km/gal.`;
+  return m;
+}
+function answer(q){
+  const t=q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  if(/zona|donde|norte|sur\b|centro|oriente|ladera/.test(t))return zoneMsg();
+  if(/descans|pausa|almuer|comer/.test(t))return restMsg();
+  if(/meta|llegar|objetivo/.test(t))return goalMsg();
+  if(/vehicul|carro|moto|kia|hero/.test(t))return vehMsg();
+  if(/gasolina|combustible|galon|tanque/.test(t))return fuelMsg();
+  if(/mejor|hora|cuando|franja|pico/.test(t))return bestMsg();
+  if(/hoy|voy|como|ahora/.test(t))return statusMsg()+' '+nowMsg();
+  return 'Puedo ayudarte con: cómo vas hoy, en qué zona moverte, cuándo descansar, la meta, qué vehículo usar, gasolina y tus mejores horas. Prueba con los botones.';
+}
+const chatHtml=()=>chatLog.map(c=>`<div class="bq">${esc(c.q)}</div><div class="ba">${c.a}</div>`).join('');
+function coachCard(){
+  const h=new Date().getHours(),gr=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',name=S.settings.name||'';
+  const days=allDates().filter(d=>dayStats(d).total>0).length,hasZ=S.incomes.some(x=>x.zone);
+  const parts=[statusMsg(),nowMsg(),hasZ?zoneMsg():'Tip: marca la zona (norte, sur…) en cada viaje y te diré dónde te va mejor.'];
+  const qs=['¿Cómo voy hoy?','¿Dónde me conviene ir ahora?','¿Cuándo descanso?','¿Cómo llego a la meta?','¿Qué vehículo uso?'];
+  return`<div class="card coach"><div class="ch"><b>🤖 ${gr}${name?', '+esc(name):''}</b><span class="vtag">asistente local</span></div>
+  ${parts.map(p=>`<p>${p}</p>`).join('')}${days<3?`<p class="muted">Llevo ${days} día(s) de datos: mis consejos mejoran con más días.</p>`:''}
+  <div id="chatLog">${chatHtml()}</div>
+  <div class="qchips">${qs.map(q=>`<button type="button" data-q="${q}">${q}</button>`).join('')}</div>
+  <form id="fChat" class="chatrow"><input name="q" placeholder="Pregúntame algo…" autocomplete="off"><button class="sec">Enviar</button></form></div>`;
+}
+
+/* ========= Render y eventos ========= */
+function render(){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===view));
+  const vs=$('#vehSel');vs.innerHTML=S.vehicles.map(v=>`<option value="${v.id}" ${v.id===actV()?'selected':''}>${vName(v.id)}</option>`).join('');
+  vs.onchange=e=>{S.settings.vehicle=e.target.value;save();render()};
+  $('#app').innerHTML={hoy:viewHoy,reg:viewReg,ana:viewAna,his:viewHis,aju:viewAju}[view]();
+  bind();if(render.v!==view){window.scrollTo(0,0);render.v=view}
+}
+function go(v){view=v;render()}
+function bind(){
+  const dv=$('#dayVeh');if(dv)dv.onchange=e=>{[...S.incomes,...S.expenses,...S.shifts].forEach(x=>{if(x.date===cur)x.veh=e.target.value});save();toast('Vehículo del día actualizado ✓');render()};
+  const cd=$('#curDate');if(cd)cd.onchange=e=>{cur=e.target.value||today();render()};
+  const dem=$('#chkDem');if(dem)dem.onchange=e=>{showDemand=e.target.checked;render()};
+  const fc=$('#fChat');if(fc){
+    const ask=q=>{if(!q.trim())return;chatLog.push({q,a:answer(q)});chatLog=chatLog.slice(-4);$('#chatLog').innerHTML=chatHtml()};
+    fc.onsubmit=e=>{e.preventDefault();ask(fc.q.value);fc.q.value=''};
+    document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>ask(b.dataset.q));
+  }
+  const f0=$('#fVia');if(f0){
+    const ae=f0.amount,show=()=>{$('#vAmt').textContent=money(+ae.value||0);f0.querySelectorAll('[data-amt]').forEach(b=>b.classList.toggle('on',+b.dataset.amt===+ae.value))};
+    f0.querySelectorAll('[data-amt]').forEach(b=>b.onclick=()=>{ae.value=b.dataset.amt;show()});
+    ae.oninput=show;
+    f0.querySelectorAll('[data-meth]').forEach(b=>b.onclick=()=>{f0.meth.value=b.dataset.meth;f0.querySelectorAll('[data-meth]').forEach(x=>x.classList.toggle('on',x===b))});
+    f0.querySelectorAll('[data-zone]').forEach(b=>b.onclick=()=>{f0.zone.value=f0.zone.value===b.dataset.zone?'':b.dataset.zone;f0.querySelectorAll('[data-zone]').forEach(x=>x.classList.toggle('on',x.dataset.zone===f0.zone.value))});
+    f0.onsubmit=e=>{e.preventDefault();const f=new FormData(f0),amt=+f.get('amount')||0;if(!amt)return toast('Pon el valor del viaje');
+      const km=+f.get('km')||0,mn=+f.get('min')||0,n=new Date();
+      S.incomes.push({id:uid(),date:today(),hour:n.getHours(),amount:amt,kind:'viaje',method:f.get('meth'),platform:f.get('platform'),trips:1,km:km||undefined,min:mn||undefined,zone:f.get('zone')||undefined,veh:actV(),src:'trip',ts:n.toISOString()});
+      S.settings.platform=f.get('platform');S.settings.lastMethod=f.get('meth');S.settings.lastZone=f.get('zone')||'';cur=today();save();
+      const mk=+S.settings.minKm||0;let msg='Viaje guardado ✓';
+      if(km){const pk=amt/km;msg+=' · '+money(pk)+'/km';if(mk)msg+=pk>=mk?' ✓':' ⚠ bajo tu mínimo'}
+      toast(msg);ae.value='';f0.km.value='';f0.min.value='';show();
+      const td=dayStats(today());$('#viaFb').textContent=td.trips+' viaje(s) hoy · '+money(td.total)};
+  }
+  const f1=$('#fInc');if(f1)f1.onsubmit=e=>{e.preventDefault();const f=new FormData(f1),kind=f.get('kind'),hasH=kind==='viaje'||kind==='propina';
+    S.incomes.push({id:uid(),date:f.get('date'),hour:hasH?+f.get('time').split(':')[0]:null,amount:+f.get('amount'),kind,method:f.get('method'),platform:f.get('platform'),trips:kind==='viaje'?+f.get('trips')||0:0,veh:actV(),zone:f.get('zone')||undefined});
+    S.settings.platform=f.get('platform');cur=f.get('date');save();f1.amount.value='';toast('Ingreso guardado ✓')};
+  const f2=$('#fGas');if(f2){const pr=+S.settings.fuelPrice||16339;
+    const upd=()=>{const a=+f2.amount.value||0;$('#galTxt').textContent=f2.cat.value==='Gasolina'&&a?'≈ '+(a/pr).toFixed(2)+' galones':'Escribe el monto y calculo los galones'};
+    f2.amount.oninput=upd;f2.cat.addEventListener('change',upd);
+    f2.onsubmit=e=>{e.preventDefault();const f=new FormData(f2),cat=f.get('cat'),gal=cat==='Gasolina'?(+f.get('amount')||0)/pr:0;
+    S.expenses.push({id:uid(),date:f.get('date'),cat,amount:+f.get('amount'),gal,price:cat==='Gasolina'?pr:0,note:f.get('note'),veh:actV()});cur=f.get('date');save();f2.amount.value='';f2.note.value='';upd();toast('Gasto guardado ✓')}}
+  const f3=$('#fJor');if(f3){const calc=()=>{const a=+f3.kmIni.value,b=+f3.kmFin.value;if(a&&b&&b>=a)f3.km.value=b-a};f3.kmIni.oninput=calc;f3.kmFin.oninput=calc;
+    f3.onsubmit=e=>{e.preventDefault();const f=new FormData(f3);S.shifts.push({id:uid(),date:f.get('date'),start:f.get('start'),end:f.get('end'),kmIni:f.get('kmIni'),kmFin:f.get('kmFin'),km:+f.get('km')||0,veh:actV()});cur=f.get('date');save();toast('Jornada guardada ✓');go('hoy')}}
+  const f4=$('#fDia');if(f4){
+    const tot=()=>{let t=0;for(let h=4;h<24;h++)t+=+f4['h'+h].value||0;$('#gTot').textContent=money(t)};tot();f4.oninput=tot;
+    $('#gDate').onchange=e=>{gridDate=e.target.value||today();render()};$('#gPlat').onchange=e=>{gridPlat=e.target.value;render()};
+    f4.onsubmit=e=>{e.preventDefault();const prev=S.incomes.find(x=>x.date===gridDate&&x.src==='grid'&&x.platform===gridPlat),gv=prev&&prev.veh?prev.veh:actV();S.incomes=S.incomes.filter(x=>!(x.date===gridDate&&x.src==='grid'&&x.platform===gridPlat));
+      for(let h=4;h<24;h++){const v=+f4['h'+h].value;if(v>0)S.incomes.push({id:uid(),date:gridDate,hour:h,amount:v,kind:'viaje',method:'mixto',platform:gridPlat,src:'grid',veh:gv})}
+      const c=f4.cash.value;if(c!=='')S.meta[gridDate]={cash:+c};else delete S.meta[gridDate];
+      cur=gridDate;save();toast('Día guardado ✓');go('hoy')}}
+}
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-view],[data-reg],[data-per],[data-vf],[data-act],[data-del],[data-open]');if(!t)return;
+  const d=t.dataset;
+  if(d.view)return go(d.view);
+  if(d.reg){regTab=d.reg;if(regTab==='dia')gridDate=cur;return render()}
+  if(d.per){per=d.per;return render()}
+  if(d.vf){vf=d.vf;return render()}
+  if(d.open){cur=d.open;return go('hoy')}
+  if(d.del){const[k,id]=d.del.split(':');if(!await sheet('¿Eliminar este registro?',{ok:'Eliminar',danger:1}))return;
+    if(k==='inc')S.incomes=S.incomes.filter(x=>x.id!==id);if(k==='exp')S.expenses=S.expenses.filter(x=>x.id!==id);if(k==='sh')S.shifts=S.shifts.filter(x=>x.id!==id);
+    save();return render()}
+  const a=d.act;
+  if(a==='prev'){cur=addDays(cur,-1);render()}
+  if(a==='next'){cur=addDays(cur,1);render()}
+  if(a==='goal'){const v=await sheet('Meta diaria (COP)',{input:S.settings.goal||'',ph:'150000',ok:'Guardar'});if(v!==null){S.settings.goal=+String(v).replace(/\D/g,'')||0;save();render()}}
+  if(a==='savegoal'){S.settings.goal=+$('#goalIn').value||0;save();toast('Meta guardada ✓')}
+  if(a==='savefuel'){S.settings.fuelPrice=+$('#fuelIn').value||16339;save();toast('Precio guardado ✓')}
+  if(a==='savemin'){S.settings.minKm=+$('#minKmIn').value||0;save();toast('Mínimo guardado ✓')}
+  if(a==='addzone'){const n=$('#zName').value.trim();if(!n)return toast('Escribe la zona');if(!S.zones.includes(n))S.zones.push(n);save();render()}
+  if(a==='delzone'){S.zones=S.zones.filter(z=>z!==d.z);save();render()}
+  if(a==='savename'){S.settings.name=$('#nameIn').value.trim();save();toast('Guardado ✓')}
+  if(a==='addveh'){const n=$('#vName').value.trim();if(!n)return toast('Escribe el nombre');S.vehicles.push({id:'v_'+uid(),name:n,type:$('#vType').value});save();toast('Vehículo agregado ✓');render()}
+  if(a==='delveh'){if(S.vehicles.length<2)return toast('Debe quedar al menos un vehículo');if(await sheet('¿Quitar este vehículo? Sus registros se conservan.',{ok:'Quitar',danger:1})){S.vehicles=S.vehicles.filter(v=>v.id!==d.id);if(S.settings.vehicle===d.id)S.settings.vehicle=S.vehicles[0].id;save();render()}}
+  if(a==='expjson')dl('bitacora-taxi-'+today()+'.json',JSON.stringify(S),'application/json');
+  if(a==='expcsv'){const r=[['tipo','fecha','hora','categoria','plataforma','metodo','monto','detalle']];
+    S.incomes.forEach(x=>r.push(['ingreso',x.date,x.hour??'',x.kind,x.platform,x.method,x.amount,(x.trips||'')+(x.km?' | '+x.km+' km':'')+(x.min?' | '+x.min+' min':'')]));
+    S.expenses.forEach(x=>r.push(['gasto',x.date,'',x.cat,'','',x.amount,(x.gal?x.gal+' gal ':'')+(x.note||'')]));
+    S.shifts.forEach(x=>r.push(['jornada',x.date,x.start+'-'+x.end,'','','','',x.km+' km']));
+    dl('bitacora-taxi-'+today()+'.csv','\ufeff'+r.map(a=>a.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv')}
+  if(a==='impjson')$('#fileIn').click();
+  if(a==='wipe'&&await sheet('Se borrará TODO. ¿Seguro?',{ok:'Continuar',danger:1})&&await sheet('Última confirmación: ¿borrar todo?',{ok:'Borrar todo',danger:1})){S=norm({incomes:[],expenses:[],shifts:[],meta:{},settings:{goal:0,platform:'DiDi',name:''}});save();render()}
+});
+document.addEventListener('change',e=>{if(e.target.id==='fileIn'){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const o=JSON.parse(r.result);if(!o.incomes||!o.expenses)throw 0;S=norm(o);save();toast('Respaldo restaurado ✓');render()}catch(x){toast('Archivo no válido')}};r.readAsText(f)}});
+function dl(name,txt,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+render();
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+</script>
+</body>
+</html>
